@@ -17,7 +17,7 @@ struct obstacle_t {
 struct game_ctx_t {
     struct section_t screen[LCD_WIDTH];
     struct coords_t player;
-    struct coorts_t player_vel;
+    struct coords_t player_vel;
     fixed_t score;
 
     int draw_position;

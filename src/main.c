@@ -83,7 +83,12 @@ void dash_main(void)
 #endif
         scroll(ctx);
         draw(ctx);
-        printf("%d\n", plat_pollaction());
+        enum keyaction_t key = plat_pollaction();
+        if(key == ACTION_QUIT)
+        {
+            plat_logf("user quit\n");
+            return;
+        }
         //plat_sleep(10);
     }
 }
