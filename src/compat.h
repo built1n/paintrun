@@ -1,0 +1,70 @@
+/* defines a platform-neutral abstraction layer */
+
+/*
+  What a platform MUST define:
+   LCD_WIDTH: fixed width of the screen, in pixels
+   LCD_HEIGHT: height of screen
+   RAND_MAX: maximum value returned by plat_rand
+   color_t: RGB type
+   LCD_RGBPACK(r,g,b): creates a color_t object from RGB components
+   fixed_t: a fixed-point type with FRACBITS fractional bits
+   FRACBITS: number of fractional bits in a fixed_t type
+   FP_MUL(x,y): fixed-point multiply
+   FP_DIV(x,y): fixed-point divide
+   LOGF(str, ...): logging
+*/
+
+/*
+  What a platform CAN define:
+   PLAT_WANTS_YIELD - if defined, the code will call plat_yield() when possible
+*/
+
+#ifdef ROCKBOX
+#include "../platforms/rockbox/rockbox.h"
+#else
+#include "../platforms/sdl/sdl.h"
+#endif
+
+#undef ARRAYLEN
+#define ARRAYLEN(x) (sizeof(x)/sizeof(x[0]))
+
+#undef FIXED
+#define FIXED(x) ((x)<<FRACBITS)
+
+#undef RANDRANGE
+#define RANDRANGE(a, b) (plat_rand()%(b-a)+a)
+
+/* rounds x to nearest integer */
+#undef FP_ROUND
+#define FP_ROUND(x) (((x)+(1<<(FRACBITS-1)))>>FRACBITS)
+
+#undef FLOAT_TO_FIXED
+#define FLOAT_TO_FIXED(x) (x*(1<<FRACBITS))
+
+#undef RAND_RANGE
+#define RAND_RANGE(x,y) (plat_rand()%(y-x+1)+x)
+
+/* fixed_t is a fixed-point type with FRACBITS fractional bits */
+/* FRACBITS is platform-dependent */
+typedef long fixed_t;
+
+void plat_set_foreground(color_t);
+void plat_set_background(color_t);
+
+void plat_clear(void);
+void plat_vline(int x, int y1, int y2);
+void plat_update(void);
+
+unsigned plat_rand(void);
+
+enum keyaction_t { ACTION_NONE = 0, ACTION_JUMP, ACTION_QUIT };
+
+enum keyaction_t plat_pollaction(void);
+
+#ifdef PLAT_WANTS_YIELD
+void plat_yield(void);
+#endif
+
+void plat_sleep(long ms);
+
+void plat_logf(const char*, ...);
