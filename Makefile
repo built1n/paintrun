@@ -2,7 +2,7 @@ CC = gcc
 
 OBJ = src/main.o
 
-CFLAGS = -Isrc/ -O3 -std=gnu99 -g
+CFLAGS = -Isrc/ -O -std=gnu99 -g
 
 SDLOBJ = platforms/sdl/sdl.o
 
@@ -17,4 +17,5 @@ dash-sdl: $(OBJ) $(SDLOBJ) Makefile
 	@$(CC) $(CFLAGS) $(SDLFLAGS) -c $< -o $@ $(EXTRAFLAGS)
 
 clean:
+	@echo "Cleaning build directory..."
 	@rm -f $(OBJ) $(SDLOBJ)

@@ -4,12 +4,51 @@ void draw(struct game_ctx_t *ctx)
 {
     plat_set_background(LCD_RGBPACK(0, 0, 0));
     plat_clear();
-    for(int i=0;i<ARRAYLEN(ctx->screen); ++i)
+    for(int i = 0; i < ARRAYLEN(ctx->screen); ++i)
     {
         plat_set_foreground(ctx->screen[i].color);
         plat_vline(i, LCD_HEIGHT, LCD_HEIGHT - ctx->screen[i].height);
     }
+
+    plat_set_foreground(ctx->player.color);
+
+    plat_fillrect(ctx->player.position.x >> FRACBITS, ctx->player.position.y >> FRACBITS,
+                  ctx->player.bounds.x >> FRACBITS, ctx->player.bounds.y >> FRACBITS);
+
     plat_update();
+}
+
+static void generate_new(struct game_ctx_t *ctx)
+{
+    ctx->current_type = (ctx->current_type == VOID) ? LAND : VOID;
+    if(ctx->current_type == LAND)
+    {
+        ctx->current_height = RAND_RANGE(HEIGHT_INCREMENT, LCD_HEIGHT - HEIGHT_INCREMENT);
+    }
+    else
+    {
+        ctx->current_height = 0;
+    }
+    if(ctx->current_type == VOID)
+        ctx->left_of_current = GAP_MED;
+    else
+    {
+        switch(RAND_RANGE(0,2))
+        {
+        case 0:
+            ctx->left_of_current = GAP_SMALL;
+            break;
+        case 1:
+            ctx->left_of_current = GAP_MED;
+            break;
+        case 2:
+            ctx->left_of_current = GAP_LARGE;
+            break;
+        default:
+            /* panic */
+            assert(0);
+        }
+    }
 }
 
 void scroll(struct game_ctx_t *ctx)
@@ -26,46 +65,48 @@ void scroll(struct game_ctx_t *ctx)
     if(!ctx->left_of_current--)
     {
         /* generate next block */
-        ctx->current_type = (ctx->current_type == VOID) ? LAND : VOID;
-        if(ctx->current_type == LAND)
-        {
-            ctx->current_height = RAND_RANGE(HEIGHT_INCREMENT, LCD_HEIGHT - HEIGHT_INCREMENT);
-        }
-        else
-        {
-            ctx->current_height = 0;
-        }
-        if(ctx->current_type == VOID)
-            ctx->left_of_current = GAP_MED;
-        else
-        {
-            switch(RAND_RANGE(0,2))
-            {
-            case 0:
-                ctx->left_of_current = GAP_SMALL;
-                break;
-            case 1:
-                ctx->left_of_current = GAP_MED;
-                break;
-            case 2:
-                ctx->left_of_current = GAP_LARGE;
-                break;
-            default:
-                /* panic */
-                assert(0);
-            }
-        }
+        generate_new(ctx);
     }
 }
 
-void dash_main(void)
+void update_player(struct game_ctx_t *ctx)
 {
-    struct game_ctx_t realctx;
-    struct game_ctx_t *ctx = &realctx;
+    ctx->player.position.x += ctx->player.vel.x;
+    ctx->player.position.y += ctx->player.vel.y;
+
+    if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS > LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height ||
+       (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT)
+    {
+        plat_gameover(ctx);
+        ctx->status = OVER;
+    }
+
+    if(ctx->player.position.y <= 0)
+    {
+        ctx->player.vel.y = FIXED(0);
+        ctx->player.position.y = FIXED(0);
+    }
+
+    /* check for collision with horizontal surfaces or apply gravity */
+    if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height ||
+       (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x) >> FRACBITS].height)
+    {
+        ctx->player.vel.y = FIXED(0);
+        ctx->screen[((ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS) - 1].color = LCD_RGBPACK(100,100,100);
+    }
+    else
+    {
+        ctx->player.vel.y = MIN(ctx->player.vel.y + FP_DIV(FIXED(1),FIXED(100)), MAX_SPEED);
+    }
+}
+
+static void init_world(struct game_ctx_t *ctx)
+{
     memset(ctx, 0, sizeof(*ctx));
 
     plat_logf("init screen");
 
+    /* first generate the initial block */
     for(ctx->draw_position = 0; ctx->draw_position < ARRAYLEN(ctx->screen)/3; ++ctx->draw_position)
     {
         ctx->screen[ctx->draw_position].height = LCD_HEIGHT/3;
@@ -76,19 +117,69 @@ void dash_main(void)
     ctx->current_height = 0;
     ctx->left_of_current = GAP_MED;
 
-    while(1)
+    /* initialize the rest of the world */
+    while(ctx->draw_position != ARRAYLEN(ctx->screen) - 1)
+        scroll(ctx);
+}
+
+void about_screen(void)
+{
+    /* TODO */
+    return;
+}
+
+void do_game(void)
+{
+    struct game_ctx_t realctx;
+    struct game_ctx_t *ctx = &realctx;
+
+    init_world(ctx);
+
+    ctx->player.position.x = PLAYER_INITX;
+    ctx->player.position.y = PLAYER_INITY;
+
+    ctx->player.bounds.x = FIXED(PLAYER_SIZE);
+    ctx->player.bounds.y = FIXED(PLAYER_SIZE);
+
+    ctx->player.color = LCD_RGBPACK(200, 20, 20);
+
+    while(ctx->status != OVER)
     {
 #ifdef PLAT_WANTS_YIELD
         plat_yield();
 #endif
         scroll(ctx);
+        update_player(ctx);
         draw(ctx);
         enum keyaction_t key = plat_pollaction();
-        if(key == ACTION_QUIT)
+        if(key == ACTION_PAUSE)
         {
-            plat_logf("user quit\n");
+            plat_paused(ctx);
+        }
+        else if (key == ACTION_JUMP)
+        {
+            if(ctx->player.vel.y > -MAX_SPEED)
+                ctx->player.vel.y -= FP_DIV(FIXED(1),FIXED(2));
+        }
+        plat_sleep(1);
+    }
+}
+
+void dash_main(void)
+{
+    /* main menu */
+    while(1)
+    {
+        switch(plat_domenu())
+        {
+        case MENU_DOGAME:
+            do_game();
+            break;
+        case MENU_ABOUT:
+            about_screen();
+            break;
+        case MENU_QUIT:
             return;
         }
-        //plat_sleep(10);
     }
 }

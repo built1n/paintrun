@@ -1,5 +1,4 @@
 #include <SDL/SDL.h>
-#include <SDL/SDL_video.h>
 
 #include <assert.h>
 #include <math.h>
@@ -177,7 +176,6 @@ unsigned int sdlplat_rgbpack(uint8_t r, uint8_t g, uint8_t b)
 
 static enum keyaction_t action;
 
-
 void plat_yield(void)
 {
     SDL_Event event;
@@ -195,7 +193,7 @@ void plat_yield(void)
             }
             else if(event.key.keysym.sym == SDLK_ESCAPE)
             {
-                action = ACTION_QUIT;
+                action = ACTION_PAUSE;
             }
             break;
         }
@@ -209,11 +207,28 @@ enum keyaction_t plat_pollaction(void)
     return ret;
 }
 
+enum menuaction_t plat_domenu(void)
+{
+
+}
+
+void plat_gameover(struct game_ctx_t *ctx)
+{
+
+}
+
+void plat_paused(struct game_ctx_t *ctx)
+{
+
+}
+
 int main(int argc, char* argv[])
 {
     plat_logf("SDL init");
     SDL_Init(SDL_INIT_VIDEO);
     screen = SDL_SetVideoMode(LCD_WIDTH, LCD_HEIGHT, 32, SDL_HWSURFACE | SDL_HWACCEL);
+
+    SDL_EnableKeyRepeat(1, SDL_DEFAULT_REPEAT_INTERVAL);
 
     assert(screen != NULL);
     fgcol = LCD_RGBPACK(255,255,255);

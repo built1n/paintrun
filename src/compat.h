@@ -44,6 +44,9 @@
 #undef RAND_RANGE
 #define RAND_RANGE(x,y) (plat_rand()%(y-x+1)+x)
 
+#undef MIN
+#define MIN(x,y) (x<y?x:y)
+
 /* fixed_t is a fixed-point type with FRACBITS fractional bits */
 /* FRACBITS is platform-dependent */
 typedef long fixed_t;
@@ -53,11 +56,12 @@ void plat_set_background(color_t);
 
 void plat_clear(void);
 void plat_vline(int x, int y1, int y2);
+void plat_fillrect(int x, int y, int w, int h);
 void plat_update(void);
 
 unsigned plat_rand(void);
 
-enum keyaction_t { ACTION_NONE = 0, ACTION_JUMP, ACTION_QUIT };
+enum keyaction_t { ACTION_NONE = 0, ACTION_JUMP, ACTION_PAUSE };
 
 enum keyaction_t plat_pollaction(void);
 
@@ -68,3 +72,13 @@ void plat_yield(void);
 void plat_sleep(long ms);
 
 void plat_logf(const char*, ...);
+
+struct game_ctx_t;
+
+void plat_gameover(struct game_ctx_t*);
+
+enum menuaction_t { MENU_DOGAME, MENU_ABOUT, MENU_QUIT };
+
+enum menuaction_t plat_domenu(void);
+
+void plat_paused(struct game_ctx_t*);
