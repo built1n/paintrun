@@ -8,7 +8,7 @@ SDLOBJ = platforms/sdl/sdl.o
 
 SDLFLAGS = -lm -lSDL -Iplatforms/sdl
 
-dash-sdl: $(OBJ) $(SDLOBJ) Makefile
+paintrun-sdl: $(OBJ) $(SDLOBJ) Makefile
 	@echo "LD $@"
 	@$(CC) $(OBJ) $(SDLOBJ) -o $@ $(CFLAGS) $(SDLFLAGS) $(EXTRAFLAGS)
 
@@ -18,4 +18,4 @@ dash-sdl: $(OBJ) $(SDLOBJ) Makefile
 
 clean:
 	@echo "Cleaning build directory..."
-	@rm -f $(OBJ) $(SDLOBJ)
+	@rm -f $(OBJ) $(SDLOBJ) paintrun-sdl

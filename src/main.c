@@ -177,7 +177,6 @@ void do_game(void)
             if(ctx->player.vel.y > -MAX_SPEED)
                 ctx->player.vel.y -= FP_DIV(FIXED(1),FIXED(2));
         }
-        plat_sleep(1);
     }
 }
 
