@@ -75,7 +75,7 @@ void update_player(struct game_ctx_t *ctx)
 
     bool above_block = false;
 
-    if(old.y >> FRACBITS < LCD_HEIGHT - ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height &&
+    if((old.y + ctx->player.bounds.y)>> FRACBITS < LCD_HEIGHT - ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height &&
        ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height != 0)
         above_block = true;
 
