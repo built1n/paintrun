@@ -43,7 +43,7 @@ struct game_ctx_t {
 #define GAP_LARGE (WIDTH_INCREMENT * 4)
 
 #define PLAYER_SIZE 40
-#define MAX_SPEED FIXED(1)
+#define MAX_SPEED FIXED(2)
 
 #define PLAYER_INITX FIXED(LCD_WIDTH/4)
 #define PLAYER_INITY FIXED(0)

@@ -71,15 +71,16 @@ void scroll(struct game_ctx_t *ctx)
 
 void update_player(struct game_ctx_t *ctx)
 {
+    struct coords_t old = ctx->player.position;
+
+    bool above_block = false;
+
+    if(old.y >> FRACBITS < LCD_HEIGHT - ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height &&
+       ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height != 0)
+        above_block = true;
+
     ctx->player.position.x += ctx->player.vel.x;
     ctx->player.position.y += ctx->player.vel.y;
-
-    if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS > LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height ||
-       (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT)
-    {
-        plat_gameover(ctx);
-        ctx->status = OVER;
-    }
 
     if(ctx->player.position.y <= 0)
     {
@@ -87,17 +88,32 @@ void update_player(struct game_ctx_t *ctx)
         ctx->player.position.y = FIXED(0);
     }
 
+    if(((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS > LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height && !above_block)||
+       (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT)
+    {
+        plat_gameover(ctx);
+        printf("Downward velocity: %f\n", (double)ctx->player.vel.y / (1<<FRACBITS));
+        ctx->status = OVER;
+    }
+
     /* check for collision with horizontal surfaces or apply gravity */
-    if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height ||
-       (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x) >> FRACBITS].height)
+    if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height)
     {
         ctx->player.vel.y = FIXED(0);
-        ctx->screen[((ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS) - 1].color = LCD_RGBPACK(100,100,100);
+        ctx->player.position.y = FIXED(LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x)>> FRACBITS].height) - ctx->player.bounds.y;
+        ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = LCD_RGBPACK(100,100,100);
+    }
+    else if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x) >> FRACBITS].height)
+    {
+        ctx->player.vel.y = FIXED(0);
+        ctx->player.position.y = FIXED(LCD_HEIGHT - ctx->screen[(ctx->player.position.x)>> FRACBITS].height) - ctx->player.bounds.y;
+        ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = LCD_RGBPACK(100,100,100);
     }
     else
     {
         ctx->player.vel.y = MIN(ctx->player.vel.y + FP_DIV(FIXED(1),FIXED(100)), MAX_SPEED);
     }
+
 }
 
 static void init_world(struct game_ctx_t *ctx)

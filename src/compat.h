@@ -25,6 +25,8 @@
 #include "../platforms/sdl/sdl.h"
 #endif
 
+#include <stdbool.h>
+
 #undef ARRAYLEN
 #define ARRAYLEN(x) (sizeof(x)/sizeof(x[0]))
 
