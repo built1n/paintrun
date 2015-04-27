@@ -22,7 +22,7 @@
 
 void draw(struct game_ctx_t *ctx)
 {
-    plat_set_background(LCD_RGBPACK(0, 0, 0));
+    plat_set_background(BACKGROUND_COLOR);
     plat_clear();
     for(int i = 0; i < ARRAYLEN(ctx->screen); ++i)
     {
@@ -111,7 +111,6 @@ void update_player(struct game_ctx_t *ctx)
     if(((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS > LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height && !above_block)||
        (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT)
     {
-        printf("Downward velocity: %f\n", (double)ctx->player.vel.y / (1<<FRACBITS));
         ctx->status = OVER;
         return;
     }
@@ -121,13 +120,13 @@ void update_player(struct game_ctx_t *ctx)
     {
         ctx->player.vel.y = FIXED(0);
         ctx->player.position.y = FIXED(LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x)>> FRACBITS].height) - ctx->player.bounds.y;
-        ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = LCD_RGBPACK(100,100,100);
+        ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = PAINT_COLOR;
     }
     else if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x) >> FRACBITS].height)
     {
         ctx->player.vel.y = FIXED(0);
         ctx->player.position.y = FIXED(LCD_HEIGHT - ctx->screen[(ctx->player.position.x)>> FRACBITS].height) - ctx->player.bounds.y;
-        ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = LCD_RGBPACK(100,100,100);
+        ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = PAINT_COLOR;
     }
     else
     {
@@ -140,13 +139,11 @@ static void init_world(struct game_ctx_t *ctx)
 {
     memset(ctx, 0, sizeof(*ctx));
 
-    plat_logf("init screen");
-
     /* first generate the initial block */
     for(ctx->draw_position = 0; ctx->draw_position < ARRAYLEN(ctx->screen)/3; ++ctx->draw_position)
     {
         ctx->screen[ctx->draw_position].height = LCD_HEIGHT/3;
-        ctx->screen[ctx->draw_position].color = LCD_RGBPACK(240, 240, 240);
+        ctx->screen[ctx->draw_position].color = LAND_COLOR;
     }
 
     ctx->current_type = VOID;

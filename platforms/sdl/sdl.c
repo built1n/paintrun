@@ -254,14 +254,13 @@ static void fade_out(void)
 
 void plat_gameover(struct game_ctx_t *ctx)
 {
-    SDL_Surface *text = TTF_RenderText_Blended(gameover_font, "GAME OVER!", (SDL_Color){255,255,255,0});
+    SDL_Surface *text = TTF_RenderText_Blended(gameover_font, "Game Over", (SDL_Color){255,255,255,0});
     if(!text)
     {
         plat_logf("WARNING: font render failed");
         return;
     }
 
-    plat_logf("GAME OVER!");
 
     SDL_Rect dest = { screen->w / 2 - text->w / 2,
                       screen->h / 2 - 3 * text->h,
