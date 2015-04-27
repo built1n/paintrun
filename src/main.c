@@ -74,7 +74,7 @@ static void generate_new(struct game_ctx_t *ctx)
 void scroll(struct game_ctx_t *ctx)
 {
     ctx->screen[ctx->draw_position].height = ctx->current_height;
-    ctx->screen[ctx->draw_position].color = LCD_RGBPACK(240,240,240);
+    ctx->screen[ctx->draw_position].color = LAND_COLOR;
 
     if((ctx->draw_position++) == ARRAYLEN(ctx->screen))
     {
@@ -111,9 +111,9 @@ void update_player(struct game_ctx_t *ctx)
     if(((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS > LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x) >> FRACBITS].height && !above_block)||
        (ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT)
     {
-        plat_gameover(ctx);
         printf("Downward velocity: %f\n", (double)ctx->player.vel.y / (1<<FRACBITS));
         ctx->status = OVER;
+        return;
     }
 
     /* check for collision with horizontal surfaces or apply gravity */
@@ -177,10 +177,13 @@ void do_game(void)
     ctx->player.bounds.x = FIXED(PLAYER_SIZE);
     ctx->player.bounds.y = FIXED(PLAYER_SIZE);
 
-    ctx->player.color = LCD_RGBPACK(200, 20, 20);
+    ctx->player.color = PLAYER_COLOR;
+
+    long last_timestamp;
 
     while(ctx->status != OVER)
     {
+        last_timestamp = plat_time();
 #ifdef PLAT_WANTS_YIELD
         plat_yield();
 #endif
@@ -197,7 +200,11 @@ void do_game(void)
             if(ctx->player.vel.y > -MAX_SPEED)
                 ctx->player.vel.y -= FP_DIV(FIXED(1),FIXED(2));
         }
+        long delta = plat_time() - last_timestamp;
+        //printf("FPS: %d\n", (int)((double)1000 / ((delta == 0)?1:delta)));
     }
+
+    plat_gameover(ctx);
 }
 
 void dash_main(void)

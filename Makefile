@@ -2,11 +2,11 @@ CC = gcc
 
 OBJ = src/main.o
 
-CFLAGS = -Isrc/ -O -std=gnu99 -g
+CFLAGS = -Isrc/ -O3 -std=gnu99 -g
 
 SDLOBJ = platforms/sdl/sdl.o
 
-SDLFLAGS = -lm -lSDL -Iplatforms/sdl
+SDLFLAGS = -lm -lSDL -lSDL_ttf -Iplatforms/sdl
 
 paintrun-sdl: $(OBJ) $(SDLOBJ) Makefile
 	@echo "LD $@"

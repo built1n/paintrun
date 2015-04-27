@@ -19,6 +19,7 @@
  ****************************************************************************/
 
 #include <SDL/SDL.h>
+#include <SDL/SDL_ttf.h>
 
 #include <assert.h>
 #include <math.h>
@@ -31,6 +32,7 @@
 
 static SDL_Surface *screen = NULL;
 static uint32_t fgcol, bgcol;
+static TTF_Font *gameover_font = NULL, *font = NULL;
 
 void plat_clear(void)
 {
@@ -47,8 +49,6 @@ void plat_set_foreground(unsigned col)
 {
     fgcol = col;
 }
-
-/* hline is optimized and vline is not because hline is used for the drawing of circles */
 
 void plat_hline(int x1, int x2, int y)
 {
@@ -72,8 +72,13 @@ void plat_vline(int x, int y1, int y2)
         y1 = y2;
         y2 = temp;
     }
-    SDL_Rect rect = {x, y1, 1, y2-y1};
-    SDL_FillRect(screen, &rect, fgcol);
+    uint8_t *i = screen->pixels + screen->pitch * y1 + x * 4;
+    uint8_t *stop = screen->pixels + screen->pitch * y2 + x * 4;
+    while(i < stop)
+    {
+        *(uint32_t*)i = fgcol;
+        i += screen->pitch;
+    }
 }
 
 void plat_drawpixel(int x, int y)
@@ -155,7 +160,7 @@ void plat_srand(void)
     srand(time(NULL));
 }
 
-long plat_mstime(void)
+long plat_time(void)
 {
     return SDL_GetTicks();
 }
@@ -215,6 +220,10 @@ void plat_yield(void)
             {
                 action = ACTION_PAUSE;
             }
+            else
+            {
+                action = ACTION_OTHER;
+            }
             break;
         }
     }
@@ -229,12 +238,56 @@ enum keyaction_t plat_pollaction(void)
 
 enum menuaction_t plat_domenu(void)
 {
+    return MENU_DOGAME;
+}
 
+static void fade_out(void)
+{
+#define FADE_FRAMES 80
+    for(int i = 0; i < FADE_FRAMES; ++i)
+    {
+        for(int j = 0; j < screen->h * screen->pitch; ++j)
+            *(uint8_t*)(screen->pixels + j) *= .95;
+        plat_update();
+    }
 }
 
 void plat_gameover(struct game_ctx_t *ctx)
 {
+    SDL_Surface *text = TTF_RenderText_Blended(gameover_font, "GAME OVER!", (SDL_Color){255,255,255,0});
+    if(!text)
+    {
+        plat_logf("WARNING: font render failed");
+        return;
+    }
 
+    plat_logf("GAME OVER!");
+
+    SDL_Rect dest = { screen->w / 2 - text->w / 2,
+                      screen->h / 2 - 3 * text->h,
+                      text->w, text->h };
+
+    SDL_BlitSurface(text, NULL, screen, &dest);
+
+    text = TTF_RenderText_Blended(font, "Press any key to continue...", (SDL_Color){255,255,255,0});
+    if(!text)
+    {
+        plat_logf("WARNING: font render failed");
+        return;
+    }
+
+    SDL_Rect dest2 = { screen->w / 2 - text->w / 2,
+                       screen->h / 2 - 3 * text->h,
+                       text->w, text->h };
+
+    SDL_BlitSurface(text, NULL, screen, &dest2);
+
+    plat_update();
+    while(plat_pollaction() == ACTION_NONE)
+    {
+        plat_yield();
+    }
+    fade_out();
 }
 
 void plat_paused(struct game_ctx_t *ctx)
@@ -258,6 +311,24 @@ int main(int argc, char* argv[])
 
     SDL_WM_SetCaption(GAME_TITLE, GAME_TITLE);
     atexit(SDL_Quit);
+
+    plat_logf("TTF init");
+    if(TTF_Init() < 0)
+    {
+        plat_logf("TTF init fail!\n");
+    }
+
+    gameover_font = TTF_OpenFont("/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 40);
+
+    font = TTF_OpenFont("/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 20);
+
+    if(!gameover_font)
+    {
+        plat_logf("WARNING: font loading failed");
+    }
+
+    atexit(TTF_Quit);
+
     dash_main();
     return 0;
 }

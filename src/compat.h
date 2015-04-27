@@ -83,7 +83,7 @@ void plat_update(void);
 
 unsigned plat_rand(void);
 
-enum keyaction_t { ACTION_NONE = 0, ACTION_JUMP, ACTION_PAUSE };
+enum keyaction_t { ACTION_NONE = 0, ACTION_JUMP, ACTION_PAUSE, ACTION_OTHER };
 
 enum keyaction_t plat_pollaction(void);
 
@@ -92,6 +92,9 @@ void plat_yield(void);
 #endif
 
 void plat_sleep(long ms);
+
+/* time is in ms */
+long plat_time(void);
 
 void plat_logf(const char*, ...);
 
