@@ -107,3 +107,5 @@ enum menuaction_t { MENU_DOGAME, MENU_ABOUT, MENU_QUIT };
 enum menuaction_t plat_domenu(void);
 
 void plat_paused(struct game_ctx_t*);
+
+void plat_drawscore(int score);

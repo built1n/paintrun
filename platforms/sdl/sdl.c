@@ -261,7 +261,6 @@ void plat_gameover(struct game_ctx_t *ctx)
         return;
     }
 
-
     SDL_Rect dest = { screen->w / 2 - text->w / 2,
                       screen->h / 2 - 3 * text->h,
                       text->w, text->h };
@@ -292,6 +291,19 @@ void plat_gameover(struct game_ctx_t *ctx)
 void plat_paused(struct game_ctx_t *ctx)
 {
 
+}
+
+void plat_drawscore(int score)
+{
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d m", score);
+    SDL_Surface *text = TTF_RenderText_Blended(gameover_font, buf, (SDL_Color){255,255,255,0});
+
+    SDL_Rect dest = { screen->w / 2 - text->w / 2,
+                      screen->h / 2 - 4 * text->h,
+                      text->w, text->h };
+
+    SDL_BlitSurface(text, NULL, screen, &dest);
 }
 
 int main(int argc, char* argv[])

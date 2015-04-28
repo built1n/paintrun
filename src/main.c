@@ -35,6 +35,8 @@ void draw(struct game_ctx_t *ctx)
     plat_fillrect(ctx->player.position.x >> FRACBITS, ctx->player.position.y >> FRACBITS,
                   ctx->player.bounds.x >> FRACBITS, ctx->player.bounds.y >> FRACBITS);
 
+    plat_drawscore(ctx->score >> FRACBITS);
+
     plat_update();
 }
 
