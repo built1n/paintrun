@@ -43,7 +43,7 @@ static void generate_new(struct game_ctx_t *ctx)
     ctx->current_type = (ctx->current_type == VOID) ? LAND : VOID;
     if(ctx->current_type == LAND)
     {
-        ctx->current_height = RAND_RANGE(HEIGHT_INCREMENT, LCD_HEIGHT - HEIGHT_INCREMENT);
+        ctx->current_height = RAND_RANGE(MIN_HEIGHT, LCD_HEIGHT - MAX_HEIGHT);
     }
     else
     {
@@ -76,7 +76,7 @@ void scroll(struct game_ctx_t *ctx)
     ctx->screen[ctx->draw_position].height = ctx->current_height;
     ctx->screen[ctx->draw_position].color = LAND_COLOR;
 
-    if((ctx->draw_position++) == ARRAYLEN(ctx->screen))
+    if(++ctx->draw_position >= ARRAYLEN(ctx->screen))
     {
         ctx->draw_position = ARRAYLEN(ctx->screen) - 1;
         /* scroll */
@@ -121,18 +121,20 @@ void update_player(struct game_ctx_t *ctx)
         ctx->player.vel.y = FIXED(0);
         ctx->player.position.y = FIXED(LCD_HEIGHT - ctx->screen[(ctx->player.position.x + ctx->player.bounds.x)>> FRACBITS].height) - ctx->player.bounds.y;
         ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = PAINT_COLOR;
+        ctx->score += SCORE_INCREMENT;
     }
     else if((ctx->player.position.y + ctx->player.bounds.y) >> FRACBITS >= LCD_HEIGHT - ctx->screen[(ctx->player.position.x) >> FRACBITS].height)
     {
         ctx->player.vel.y = FIXED(0);
         ctx->player.position.y = FIXED(LCD_HEIGHT - ctx->screen[(ctx->player.position.x)>> FRACBITS].height) - ctx->player.bounds.y;
         ctx->screen[(ctx->player.position.x + FP_DIV(ctx->player.bounds.x, FIXED(2))) >> FRACBITS].color = PAINT_COLOR;
+        ctx->score += SCORE_INCREMENT;
     }
     else
     {
         ctx->player.vel.y = MIN(ctx->player.vel.y + FP_DIV(FIXED(1),FIXED(100)), MAX_SPEED);
     }
-
+    printf("Score: %d\n", ctx->score >> FRACBITS);
 }
 
 static void init_world(struct game_ctx_t *ctx)

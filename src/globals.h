@@ -56,11 +56,14 @@ struct game_ctx_t {
 };
 
 #define WIDTH_INCREMENT (LCD_WIDTH / 6)
-#define HEIGHT_INCREMENT (LCD_HEIGHT / 6)
+#define MAX_HEIGHT (int)(3/4.0 * LCD_HEIGHT)
+#define MIN_HEIGHT (int)(LCD_HEIGHT * .1)
 
 #define GAP_SMALL (WIDTH_INCREMENT * 2)
 #define GAP_MED (WIDTH_INCREMENT * 3)
 #define GAP_LARGE (WIDTH_INCREMENT * 4)
+
+#define SCORE_INCREMENT FP_DIV(FIXED(2), FIXED(GAP_SMALL))
 
 #define PLAYER_SIZE 40
 #define MAX_SPEED FIXED(2)
