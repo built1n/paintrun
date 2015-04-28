@@ -56,7 +56,7 @@ struct game_ctx_t {
 };
 
 #define WIDTH_INCREMENT (LCD_WIDTH / 6)
-#define MAX_HEIGHT (int)(3/4.0 * LCD_HEIGHT)
+#define MAX_HEIGHT (int)(3*LCD_HEIGHT/4)
 #define MIN_HEIGHT (int)(LCD_HEIGHT * .1)
 
 #define GAP_SMALL (WIDTH_INCREMENT * 2)

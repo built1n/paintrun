@@ -43,7 +43,7 @@ static void generate_new(struct game_ctx_t *ctx)
     ctx->current_type = (ctx->current_type == VOID) ? LAND : VOID;
     if(ctx->current_type == LAND)
     {
-        ctx->current_height = RAND_RANGE(MIN_HEIGHT, LCD_HEIGHT - MAX_HEIGHT);
+        ctx->current_height = RAND_RANGE(MIN_HEIGHT, MAX_HEIGHT);
     }
     else
     {
@@ -134,7 +134,7 @@ void update_player(struct game_ctx_t *ctx)
     {
         ctx->player.vel.y = MIN(ctx->player.vel.y + FP_DIV(FIXED(1),FIXED(100)), MAX_SPEED);
     }
-    printf("Score: %d\n", ctx->score >> FRACBITS);
+    //printf("Score: %d\n", ctx->score >> FRACBITS);
 }
 
 static void init_world(struct game_ctx_t *ctx)

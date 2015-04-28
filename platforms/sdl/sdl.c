@@ -296,6 +296,7 @@ void plat_paused(struct game_ctx_t *ctx)
 
 int main(int argc, char* argv[])
 {
+    srand(time(0));
     plat_logf("SDL init");
     SDL_Init(SDL_INIT_VIDEO);
     screen = SDL_SetVideoMode(LCD_WIDTH, LCD_HEIGHT, 32, SDL_HWSURFACE | SDL_HWACCEL);
