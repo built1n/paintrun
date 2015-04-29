@@ -330,9 +330,9 @@ int main(int argc, char* argv[])
         plat_logf("TTF init fail!\n");
     }
 
-    gameover_font = TTF_OpenFont("/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 40);
+    gameover_font = TTF_OpenFont("/usr/share/fonts/TTF/LiberationSans-Regular.ttf", LCD_HEIGHT / 12);
 
-    font = TTF_OpenFont("/usr/share/fonts/TTF/LiberationSans-Regular.ttf", 20);
+    font = TTF_OpenFont("/usr/share/fonts/TTF/LiberationSans-Regular.ttf", LCD_HEIGHT / 24);
 
     if(!gameover_font)
     {

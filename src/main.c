@@ -203,6 +203,8 @@ void do_game(void)
         }
         long delta = plat_time() - last_timestamp;
         //printf("FPS: %d\n", (int)((double)1000 / ((delta == 0)?1:delta)));
+        if(5 - delta > 0)
+            plat_sleep(5 - delta);
     }
 
     plat_gameover(ctx);
