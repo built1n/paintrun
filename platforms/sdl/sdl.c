@@ -36,8 +36,7 @@ static TTF_Font *gameover_font = NULL, *font = NULL;
 
 void plat_clear(void)
 {
-    SDL_Rect fullrect = {0, 0, LCD_WIDTH, LCD_HEIGHT};
-    SDL_FillRect(screen, &fullrect, bgcol);
+    SDL_FillRect(screen, NULL, bgcol);
 }
 
 void plat_set_background(unsigned col)

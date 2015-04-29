@@ -30,6 +30,19 @@ void draw(struct game_ctx_t *ctx)
         plat_vline(i, LCD_HEIGHT, LCD_HEIGHT - ctx->screen[i].height);
     }
 
+    for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
+    {
+        if(ctx->obstacles[i].visible)
+        {
+            plat_set_foreground(ctx->obstacles[i].color);
+            plat_logf("Draw obstacle %d", i);
+            plat_fillrect(ctx->obstacles[i].position.x >> FRACBITS, ctx->obstacles[i].position.y >> FRACBITS,
+                          ctx->obstacles[i].bounds.x >> FRACBITS, ctx->obstacles[i].bounds.y >> FRACBITS);
+            plat_logf("%d %d %d %d", ctx->obstacles[i].position.x >> FRACBITS, ctx->obstacles[i].position.y >> FRACBITS,
+                          ctx->obstacles[i].bounds.x >> FRACBITS, ctx->obstacles[i].bounds.y >> FRACBITS);
+        }
+    }
+
     plat_set_foreground(ctx->player.color);
 
     plat_fillrect(ctx->player.position.x >> FRACBITS, ctx->player.position.y >> FRACBITS,
@@ -40,9 +53,30 @@ void draw(struct game_ctx_t *ctx)
     plat_update();
 }
 
+void move_obstacle(struct obstacle_t *o)
+{
+    /* exit early if possible */
+    if(o->visible)
+    {
+        if(--o->left_to_travel == 0)
+        {
+            o->vel.y = -o->vel.y;
+        }
+        o->position.x += o->vel.x;
+        o->position.y += o->vel.y;
+
+        if(o->position.x < 0)
+        {
+            o->visible = 0;
+            plat_logf("freeing obstacle");
+        }
+    }
+}
+
 static void generate_new(struct game_ctx_t *ctx)
 {
     ctx->current_type = (ctx->current_type == VOID) ? LAND : VOID;
+
     if(ctx->current_type == LAND)
     {
         ctx->current_height = RAND_RANGE(MIN_HEIGHT, MAX_HEIGHT);
@@ -51,6 +85,7 @@ static void generate_new(struct game_ctx_t *ctx)
     {
         ctx->current_height = 0;
     }
+
     if(ctx->current_type == VOID)
         ctx->left_of_current = GAP_MED;
     else
@@ -71,6 +106,19 @@ static void generate_new(struct game_ctx_t *ctx)
             assert(0);
         }
     }
+    ctx->total_current = ctx->left_of_current;
+}
+
+static struct obstacle_t *alloc_obstacle(struct game_ctx_t *ctx)
+{
+    /* do a linear search through the obstacle list */
+    for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
+    {
+        if(!ctx->obstacles[i].visible)
+            return ctx->obstacles + i;
+    }
+    plat_logf("Out of free obstacles!\n");
+    return NULL;
 }
 
 void scroll(struct game_ctx_t *ctx)
@@ -88,6 +136,31 @@ void scroll(struct game_ctx_t *ctx)
     {
         /* generate next block */
         generate_new(ctx);
+    }
+
+    /* add obstacle */
+    if(ctx->total_current / 2 - OBSTACLE_SIZE / 2 == ctx->left_of_current)
+    {
+        plat_logf("adding obstacle");
+        struct obstacle_t *o = alloc_obstacle(ctx);
+        if(o)
+        {
+            o->position.x = FIXED(ctx->draw_position);
+            o->position.y = FIXED(LCD_HEIGHT - ctx->screen[ctx->draw_position].height - OBSTACLE_ADDL_HEIGHT);
+            o->left_to_travel = OBSTACLE_PATH_LENGTH;
+            o->vel.x = FIXED(-1);
+            o->vel.y = FIXED(-1);
+            o->bounds.x = FIXED(OBSTACLE_SIZE);
+            o->bounds.y = FIXED(OBSTACLE_SIZE);
+            o->color = PLAYER_COLOR;
+
+            o->visible = 1;
+        }
+    }
+
+    for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
+    {
+        move_obstacle(ctx->obstacles + i);
     }
 }
 

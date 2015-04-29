@@ -20,41 +20,6 @@
 
 #include "compat.h"
 
-struct section_t {
-    int height; /* in pixels, 0 = void */
-    color_t color; /* color */
-};
-
-struct coords_t {
-    fixed_t x, y;
-};
-
-struct obstacle_t {
-    struct coords_t position;
-    enum { OBSTACLE_NONE } type; /* not implemented */
-};
-
-struct player_t {
-    struct coords_t position;
-    struct coords_t bounds;
-    struct coords_t vel;
-    color_t color;
-};
-
-struct game_ctx_t {
-    struct section_t screen[LCD_WIDTH];
-    fixed_t score;
-
-    struct player_t player;
-
-    int draw_position;
-    enum { LAND, VOID } current_type;
-    int current_height;
-    int left_of_current;
-
-    enum { RUNNING, PAUSED, OVER } status;
-};
-
 #define WIDTH_INCREMENT (LCD_WIDTH / 6)
 #define MAX_HEIGHT (int)(3*LCD_HEIGHT/4)
 #define MIN_HEIGHT (int)(LCD_HEIGHT * .1)
@@ -75,3 +40,52 @@ struct game_ctx_t {
 #define LAND_COLOR LCD_RGBPACK(200,200,200)
 #define PAINT_COLOR LCD_RGBPACK(50,50,50)
 #define BACKGROUND_COLOR LCD_RGBPACK(0,0,0)
+
+#define MAX_OBSTACLES 16
+#define OBSTACLE_SIZE PLAYER_SIZE
+#define OBSTACLE_PATH_LENGTH (OBSTACLE_SIZE * 2)
+#define OBSTACLE_ADDL_HEIGHT OBSTACLE_SIZE
+
+struct section_t {
+    int height; /* in pixels, 0 = void */
+    color_t color; /* color */
+};
+
+struct coords_t {
+    fixed_t x, y;
+};
+
+struct obstacle_t {
+    struct coords_t position;
+    struct coords_t bounds;
+    struct coords_t vel;
+    int visible;
+    int left_to_travel; /* decremented until = 0, then dy flips */
+    color_t color;
+    enum { OBSTACLE_NONE } type;
+};
+
+struct player_t {
+    struct coords_t position;
+    struct coords_t bounds;
+    struct coords_t vel;
+    color_t color;
+};
+
+struct game_ctx_t {
+    struct section_t screen[LCD_WIDTH];
+    /* no linked-list here! */
+    struct obstacle_t obstacles[MAX_OBSTACLES];
+
+    fixed_t score;
+
+    struct player_t player;
+
+    int draw_position;
+    enum { LAND, VOID } current_type;
+    int current_height;
+    int left_of_current;
+    int total_current;
+
+    enum { RUNNING, PAUSED, OVER } status;
+};
