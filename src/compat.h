@@ -83,7 +83,7 @@ void plat_update(void);
 
 unsigned plat_rand(void);
 
-enum keyaction_t { ACTION_NONE = 0, ACTION_JUMP, ACTION_PAUSE, ACTION_OTHER };
+enum keyaction_t { NONE = 0, ACTION_JUMP, ACTION_PAUSE, ACTION_OTHER };
 
 enum keyaction_t plat_pollaction(void);
 

@@ -231,7 +231,7 @@ void plat_yield(void)
 enum keyaction_t plat_pollaction(void)
 {
     enum keyaction_t ret = action;
-    action = ACTION_NONE;
+    action = NONE;
     return ret;
 }
 
@@ -280,7 +280,7 @@ void plat_gameover(struct game_ctx_t *ctx)
     SDL_BlitSurface(text, NULL, screen, &dest2);
 
     plat_update();
-    while(plat_pollaction() == ACTION_NONE)
+    while(plat_pollaction() == NONE)
     {
         plat_yield();
     }
@@ -318,7 +318,7 @@ int main(int argc, char* argv[])
     fgcol = LCD_RGBPACK(255,255,255);
     bgcol = LCD_RGBPACK(0,0,0);
 
-    action = ACTION_NONE;
+    action = NONE;
 
     SDL_WM_SetCaption(GAME_TITLE, GAME_TITLE);
     atexit(SDL_Quit);
