@@ -118,7 +118,7 @@ void plat_logf(const char *fmt, ...)
     va_start(ap, fmt);
     char buf[128];
     vsnprintf(buf, sizeof(buf), fmt, ap);
-    printf("%s\n", buf);
+    fprintf(stderr, "%s\n", buf);
     va_end(ap);
 }
 
@@ -242,7 +242,7 @@ enum menuaction_t plat_domenu(void)
 
 static void fade_out(void)
 {
-#define FADE_FRAMES 80
+#define FADE_FRAMES 100
     for(int i = 0; i < FADE_FRAMES; ++i)
     {
         for(int j = 0; j < screen->h * screen->pitch; ++j)
@@ -307,7 +307,7 @@ void plat_drawscore(int score)
 
 int main(int argc, char* argv[])
 {
-    srand(time(0));
+    srand(7);
     plat_logf("SDL init");
     SDL_Init(SDL_INIT_VIDEO);
     screen = SDL_SetVideoMode(LCD_WIDTH, LCD_HEIGHT, 32, SDL_HWSURFACE | SDL_HWACCEL);

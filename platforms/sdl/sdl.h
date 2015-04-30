@@ -33,7 +33,9 @@
 #define FRACBITS 16
 #define LCD_WIDTH 640
 #define LCD_HEIGHT 480
+
 unsigned sdlplat_rgbpack(uint8_t, uint8_t, uint8_t);
+
 #define LCD_RGBPACK(r,g,b) sdlplat_rgbpack(r,g,b)
 
 #define FP_MUL(x,y) (long)((((long long)(x)) * ((long long)(y))) >> FRACBITS)

@@ -26,8 +26,11 @@ void draw(struct game_ctx_t *ctx)
     plat_clear();
     for(int i = 0; i < ARRAYLEN(ctx->screen); ++i)
     {
-        plat_set_foreground(ctx->screen[i].color);
-        plat_vline(i, LCD_HEIGHT, LCD_HEIGHT - ctx->screen[i].height);
+        if(ctx->screen[i].height)
+        {
+            plat_set_foreground(ctx->screen[i].color);
+            plat_vline(i, LCD_HEIGHT, LCD_HEIGHT - ctx->screen[i].height);
+        }
     }
 
     for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
@@ -35,10 +38,7 @@ void draw(struct game_ctx_t *ctx)
         if(ctx->obstacles[i].visible)
         {
             plat_set_foreground(ctx->obstacles[i].color);
-            plat_logf("Draw obstacle %d", i);
             plat_fillrect(ctx->obstacles[i].position.x >> FRACBITS, ctx->obstacles[i].position.y >> FRACBITS,
-                          ctx->obstacles[i].bounds.x >> FRACBITS, ctx->obstacles[i].bounds.y >> FRACBITS);
-            plat_logf("%d %d %d %d", ctx->obstacles[i].position.x >> FRACBITS, ctx->obstacles[i].position.y >> FRACBITS,
                           ctx->obstacles[i].bounds.x >> FRACBITS, ctx->obstacles[i].bounds.y >> FRACBITS);
         }
     }
@@ -61,11 +61,12 @@ void move_obstacle(struct obstacle_t *o)
         if(--o->left_to_travel == 0)
         {
             o->vel.y = -o->vel.y;
+            o->left_to_travel = o->total_travel;
         }
         o->position.x += o->vel.x;
         o->position.y += o->vel.y;
 
-        if(o->position.x < 0)
+        if(o->position.x <= -o->bounds.x)
         {
             o->visible = 0;
             plat_logf("freeing obstacle");
@@ -123,8 +124,39 @@ static struct obstacle_t *alloc_obstacle(struct game_ctx_t *ctx)
 
 void scroll(struct game_ctx_t *ctx)
 {
+    /* generate next piece of the world */
     ctx->screen[ctx->draw_position].height = ctx->current_height;
     ctx->screen[ctx->draw_position].color = LAND_COLOR;
+
+    /* add obstacle if needed */
+    if(ctx->total_current / 2 + OBSTACLE_SIZE / 2 == ctx->left_of_current && ctx->current_type == LAND)
+    {
+        plat_logf("adding obstacle");
+        struct obstacle_t *o = alloc_obstacle(ctx);
+        if(o)
+        {
+            plat_logf("pos: %d", ctx->draw_position);
+            o->position.x = FIXED(ctx->draw_position);
+            o->position.y = FIXED(LCD_HEIGHT - ctx->current_height - OBSTACLE_ADDL_HEIGHT);
+            plat_logf("y: %d\nh: %d", o->position.y >> FRACBITS, ctx->screen[ctx->draw_position]);
+            o->vel.x = FIXED(-1);
+            o->vel.y = FP_DIV(FIXED(-1), FIXED(2));
+
+            o->bounds.x = FIXED(OBSTACLE_SIZE);
+            o->bounds.y = FIXED(OBSTACLE_SIZE);
+            o->left_to_travel = OBSTACLE_PATH_LENGTH;
+            o->total_travel = o->left_to_travel;
+            o->color = OBSTACLE_COLOR;
+
+            o->visible = 1;
+        }
+    }
+
+    /* move obstacles */
+    for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
+    {
+        move_obstacle(ctx->obstacles + i);
+    }
 
     if(++ctx->draw_position >= ARRAYLEN(ctx->screen))
     {
@@ -132,35 +164,11 @@ void scroll(struct game_ctx_t *ctx)
         /* scroll */
         memcpy(ctx->screen, ctx->screen + 1, sizeof(ctx->screen) - sizeof(ctx->screen[0]));
     }
+
     if(!ctx->left_of_current--)
     {
         /* generate next block */
         generate_new(ctx);
-    }
-
-    /* add obstacle */
-    if(ctx->total_current / 2 - OBSTACLE_SIZE / 2 == ctx->left_of_current)
-    {
-        plat_logf("adding obstacle");
-        struct obstacle_t *o = alloc_obstacle(ctx);
-        if(o)
-        {
-            o->position.x = FIXED(ctx->draw_position);
-            o->position.y = FIXED(LCD_HEIGHT - ctx->screen[ctx->draw_position].height - OBSTACLE_ADDL_HEIGHT);
-            o->left_to_travel = OBSTACLE_PATH_LENGTH;
-            o->vel.x = FIXED(-1);
-            o->vel.y = FIXED(-1);
-            o->bounds.x = FIXED(OBSTACLE_SIZE);
-            o->bounds.y = FIXED(OBSTACLE_SIZE);
-            o->color = PLAYER_COLOR;
-
-            o->visible = 1;
-        }
-    }
-
-    for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
-    {
-        move_obstacle(ctx->obstacles + i);
     }
 }
 
@@ -170,7 +178,7 @@ void update_player(struct game_ctx_t *ctx)
 
     bool above_block = false;
 
-    if((old.y + ctx->player.bounds.y)>> FRACBITS < LCD_HEIGHT - ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height &&
+    if((old.y + ctx->player.bounds.y) >> FRACBITS < LCD_HEIGHT - ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height &&
        ctx->screen[(old.x + ctx->player.bounds.x) >> FRACBITS].height != 0)
         above_block = true;
 
@@ -209,6 +217,25 @@ void update_player(struct game_ctx_t *ctx)
     {
         ctx->player.vel.y = MIN(ctx->player.vel.y + FP_DIV(FIXED(1),FIXED(100)), MAX_SPEED);
     }
+
+    /* check with obstacle collision */
+    for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
+    {
+        if(ctx->obstacles[i].visible)
+        {
+            struct obstacle_t *o = ctx->obstacles + i;
+            if(ctx->player.position.x + ctx->player.bounds.x >= o->position.x &&
+               ctx->player.position.x <= o->position.x + o->bounds.x)
+            {
+                if(ctx->player.position.y + ctx->player.bounds.y >= o->position.y &&
+                   ctx->player.position.y <= o->position.y + o->bounds.y)
+                {
+                    ctx->status = OVER;
+                    return;
+                }
+            }
+        }
+    }
     //printf("Score: %d\n", ctx->score >> FRACBITS);
 }
 
@@ -229,7 +256,9 @@ static void init_world(struct game_ctx_t *ctx)
 
     /* initialize the rest of the world */
     while(ctx->draw_position != ARRAYLEN(ctx->screen) - 1)
+    {
         scroll(ctx);
+    }
 }
 
 void about_screen(void)

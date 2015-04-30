@@ -21,7 +21,7 @@
 #include "compat.h"
 
 #define WIDTH_INCREMENT (LCD_WIDTH / 6)
-#define MAX_HEIGHT (int)(3*LCD_HEIGHT/4)
+#define MAX_HEIGHT (int)(3*LCD_HEIGHT/5)
 #define MIN_HEIGHT (int)(LCD_HEIGHT * .1)
 
 #define GAP_SMALL (WIDTH_INCREMENT * 2)
@@ -31,7 +31,7 @@
 #define SCORE_INCREMENT FP_DIV(FIXED(1), FIXED(GAP_SMALL))
 
 #define PLAYER_SIZE (LCD_HEIGHT / 12)
-#define MAX_SPEED FIXED(2)
+#define MAX_SPEED FIXED(3)
 
 #define PLAYER_INITX FIXED(LCD_WIDTH/4)
 #define PLAYER_INITY FIXED(0)
@@ -40,11 +40,12 @@
 #define LAND_COLOR LCD_RGBPACK(200,200,200)
 #define PAINT_COLOR LCD_RGBPACK(50,50,50)
 #define BACKGROUND_COLOR LCD_RGBPACK(0,0,0)
+#define OBSTACLE_COLOR LCD_RGBPACK(40,240,40)
 
 #define MAX_OBSTACLES 16
 #define OBSTACLE_SIZE PLAYER_SIZE
-#define OBSTACLE_PATH_LENGTH (OBSTACLE_SIZE * 2)
-#define OBSTACLE_ADDL_HEIGHT OBSTACLE_SIZE
+#define OBSTACLE_PATH_LENGTH (OBSTACLE_SIZE * 4)
+#define OBSTACLE_ADDL_HEIGHT (int)(OBSTACLE_SIZE * 1.5)
 
 struct section_t {
     int height; /* in pixels, 0 = void */
@@ -59,10 +60,11 @@ struct obstacle_t {
     struct coords_t position;
     struct coords_t bounds;
     struct coords_t vel;
-    int visible;
-    int left_to_travel; /* decremented until = 0, then dy flips */
+    int left_to_travel; /* decremented until = 0, then y velocity flips */
+    int total_travel;
     color_t color;
-    enum { OBSTACLE_NONE } type;
+
+    int visible;
 };
 
 struct player_t {
