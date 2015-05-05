@@ -266,6 +266,7 @@ void plat_gameover(struct game_ctx_t *ctx)
                       text->w, text->h };
 
     SDL_BlitSurface(text, NULL, screen, &dest);
+    SDL_FreeSurface(text);
 
     text = TTF_RenderText_Blended(font, "Press any key to continue...", (SDL_Color){255,255,255,0});
     if(!text)
@@ -279,6 +280,7 @@ void plat_gameover(struct game_ctx_t *ctx)
                        text->w, text->h };
 
     SDL_BlitSurface(text, NULL, screen, &dest2);
+    SDL_FreeSurface(text);
 
     plat_update();
     while(plat_pollaction() == NONE)
@@ -304,6 +306,7 @@ void plat_drawscore(fixed_t score)
                       text->w, text->h };
 
     SDL_BlitSurface(text, NULL, screen, &dest);
+    SDL_FreeSurface(text);
 }
 
 fixed_t plat_cos8(uint8_t phase)
