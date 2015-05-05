@@ -48,18 +48,21 @@ void draw(struct game_ctx_t *ctx)
     plat_fillrect(ctx->player.position.x >> FRACBITS, ctx->player.position.y >> FRACBITS,
                   ctx->player.bounds.x >> FRACBITS, ctx->player.bounds.y >> FRACBITS);
 
-    plat_drawscore(ctx->score >> FRACBITS);
+    plat_drawscore(ctx->score);
 
     plat_update();
 }
 
-void move_obstacle(struct obstacle_t *o)
+void move_obstacle(struct obstacle_t *o, struct game_ctx_t *ctx)
 {
     /* exit early if possible */
     if(o->visible)
     {
-        if(--o->left_to_travel == 0)
+        if(--o->left_to_travel <= 0)
         {
+            plat_logf("flipping y vel %d above block", ctx->screen[o->position.x >> FRACBITS].height - (o->position.y >> FRACBITS));
+            plat_logf("y at flip: %d", o->position.y >> FRACBITS);
+            plat_logf("height of block: %d", ctx->screen[o->position.x >> FRACBITS].height);
             o->vel.y = -o->vel.y;
             o->left_to_travel = o->total_travel;
         }
@@ -116,7 +119,9 @@ static struct obstacle_t *alloc_obstacle(struct game_ctx_t *ctx)
     for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
     {
         if(!ctx->obstacles[i].visible)
+        {
             return ctx->obstacles + i;
+        }
     }
     plat_logf("Out of free obstacles!\n");
     return NULL;
@@ -136,17 +141,28 @@ void scroll(struct game_ctx_t *ctx)
         if(o)
         {
             plat_logf("pos: %d", ctx->draw_position);
+            int off = RAND_RANGE(0, (int)(1*OBSTACLE_PATH_LENGTH));
+            plat_logf("offs: %d", off);
+
             o->position.x = FIXED(ctx->draw_position);
-            o->position.y = FIXED(LCD_HEIGHT - ctx->current_height - OBSTACLE_ADDL_HEIGHT);
+            o->position.y = FIXED(LCD_HEIGHT - ctx->current_height - off - OBSTACLE_ADDL_HEIGHT);
+
             plat_logf("y: %d\nh: %d", o->position.y >> FRACBITS, ctx->screen[ctx->draw_position]);
+
             o->vel.x = FIXED(-1);
             o->vel.y = FP_DIV(FIXED(-1), FIXED(2));
 
             o->bounds.x = FIXED(OBSTACLE_SIZE);
             o->bounds.y = FIXED(OBSTACLE_SIZE);
-            o->left_to_travel = OBSTACLE_PATH_LENGTH;
-            o->total_travel = o->left_to_travel;
+
+            o->left_to_travel = OBSTACLE_PATH_LENGTH - 2 * off;
+            o->total_travel = OBSTACLE_PATH_LENGTH;
+
+            plat_logf("left to travel: %d\ntotal: %d", o->left_to_travel, o->total_travel);
+
             o->color = OBSTACLE_COLOR;
+
+            o->stage = 0;
 
             o->visible = 1;
         }
@@ -155,14 +171,14 @@ void scroll(struct game_ctx_t *ctx)
     /* move obstacles */
     for(int i = 0; i < ARRAYLEN(ctx->obstacles); ++i)
     {
-        move_obstacle(ctx->obstacles + i);
+        move_obstacle(ctx->obstacles + i, ctx);
     }
 
     if(++ctx->draw_position >= ARRAYLEN(ctx->screen))
     {
         ctx->draw_position = ARRAYLEN(ctx->screen) - 1;
         /* scroll */
-        memcpy(ctx->screen, ctx->screen + 1, sizeof(ctx->screen) - sizeof(ctx->screen[0]));
+        memmove(ctx->screen, ctx->screen + 1, sizeof(ctx->screen) - sizeof(ctx->screen[0]));
     }
 
     if(!ctx->left_of_current--)

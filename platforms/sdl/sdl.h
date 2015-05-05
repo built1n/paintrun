@@ -20,17 +20,22 @@
 
 /* here's what a platform header needs to have #defined: */
 /* FRACBITS - number of fractional bits to be used */
+/* FRACBITS must be at least 7 or else the game will function improperly */
+
 /* LCD_WIDTH - screen width */
 /* LCD_HEIGHT - screen height */
 /* LCD_RGBPACK(r,g,b) - packs RGB value into an integer */
 /* FP_MUL(x,y) - fixed-point multiply with FRACBITS fractional bits */
 /* FP_DIV(x,y) - fixed-point divide */
 
+#ifndef _SDL_PLAT_H_
+#define _SDL_PLAT_H_
+
 #include <SDL/SDL.h>
 
 #include <assert.h>
 
-#define FRACBITS 16
+#define FRACBITS 20
 #define LCD_WIDTH 640
 #define LCD_HEIGHT 480
 
@@ -45,3 +50,5 @@ unsigned sdlplat_rgbpack(uint8_t, uint8_t, uint8_t);
 #define PLAT_WANTS_YIELD
 
 typedef unsigned color_t;
+
+#endif

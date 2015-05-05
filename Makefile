@@ -1,21 +1,30 @@
-CC = gcc
+CC = clang
 
-OBJ = src/main.o
+PLATFORM = sdl
 
-CFLAGS = -Isrc/ -O3 -std=gnu99 -g
+SRC := src/*.c
+OBJ := $(SRC:.c=.o)
 
-SDLOBJ = platforms/sdl/sdl.o
+CFLAGS = -Isrc/ -O3 -std=c99 -g -Wall -fsanitize=address
 
-SDLFLAGS = -lm -lSDL -lSDL_ttf -Iplatforms/sdl
+PLATSRC := platforms/$(PLATFORM)/*.c
+PLATOBJ = $(PLATSRC:.c=.o)
 
-paintrun-sdl: $(OBJ) $(SDLOBJ) Makefile
+HEADERS := platforms/$(PLATFORM)/*.h src/*.h
+
+include platforms/$(PLATFORM)/*.make
+
+paintrun-sdl: $(OBJ) $(PLATOBJ) Makefile $(HEADERS)
 	@echo "LD $@"
-	@$(CC) $(OBJ) $(SDLOBJ) -o $@ $(CFLAGS) $(SDLFLAGS) $(EXTRAFLAGS)
+	@$(CC) $(OBJ) $(PLATOBJ) -o $@ $(CFLAGS) $(PLATFLAGS)
 
-%.o: %.c Makefile
+%.o: %.c Makefile $(HEADERS)
 	@echo "CC $<"
-	@$(CC) $(CFLAGS) $(SDLFLAGS) -c $< -o $@ $(EXTRAFLAGS)
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	@echo "Cleaning build directory..."
-	@rm -f $(OBJ) $(SDLOBJ) paintrun-sdl
+	@rm -f $(OBJ) $(PLATOBJ) paintrun-sdl
+
+all:
+	@echo $(PLATSRC) $(PLATOBJ) $(SRC) $(OBJ)

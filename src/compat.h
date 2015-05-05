@@ -46,6 +46,7 @@
 #endif
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #undef ARRAYLEN
 #define ARRAYLEN(x) (sizeof(x)/sizeof(x[0]))
@@ -108,4 +109,7 @@ enum menuaction_t plat_domenu(void);
 
 void plat_paused(struct game_ctx_t*);
 
-void plat_drawscore(int score);
+void plat_drawscore(fixed_t score);
+
+/* 0 = 0 degrees, 0xFF = 360 - 360/256 degrees */
+fixed_t plat_cos8(uint8_t phase);

@@ -44,7 +44,9 @@
 
 #define MAX_OBSTACLES 16
 #define OBSTACLE_SIZE PLAYER_SIZE
-#define OBSTACLE_PATH_LENGTH (OBSTACLE_SIZE * 4)
+
+/* this is the number of FRAMES an obstacle will travel, /NOT/ pixels! */
+#define OBSTACLE_PATH_LENGTH (OBSTACLE_SIZE * 3)
 #define OBSTACLE_ADDL_HEIGHT (int)(OBSTACLE_SIZE * 1.5)
 
 struct section_t {
@@ -62,6 +64,7 @@ struct obstacle_t {
     struct coords_t vel;
     int left_to_travel; /* decremented until = 0, then y velocity flips */
     int total_travel;
+    uint8_t stage; /* 0-255 */
     color_t color;
 
     int visible;
